@@ -1,256 +1,248 @@
 ﻿using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.DevTools.V130.Autofill;
 using OpenQA.Selenium.Support.UI;
 using SeleniumExtras.WaitHelpers;
-using static OpenQA.Selenium.BiDi.Modules.Script.RemoteValue;
+using NUnit.Framework;
 using System;
-using System.Threading;
-using OpenQA.Selenium.Interactions;
-
 
 namespace DotnetSelenium
 {
-    // test
-    public class Tests
+    public class Tests : IDisposable
     {
+        private IWebDriver _driver;
+        private WebDriverWait _wait;
+
         [SetUp]
         public void Setup()
         {
+            _driver = new ChromeDriver();
+            _wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
+            _driver.Manage().Window.Maximize();
         }
 
         [Test]
         public void Test1()
         {
-            IWebDriver driver = new ChromeDriver();
-
-            driver.Navigate().GoToUrl("https://sandbox.kowork.work");
-
-            driver.Manage().Window.Maximize();
-
-            var loginbtn = driver.FindElement(By.ClassName("black"));
-            loginbtn.Click();
-
-            //insert phone number
-            var phoneNum = driver.FindElement(By.Id("phone"));
-            phoneNum.SendKeys("09114437522");
-            phoneNum.Submit(); //or we can use driver.FindElement(By.Id("submit_phone")).Click();
-
-            //selecting employer
-            driver.FindElement(By.CssSelector("#generated-id-3")).Click();
-
-            //using password
-            var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
-            wait.Until(ExpectedConditions.ElementIsVisible(By.Id("generated-id-5"))).Click();
-
-            //fill password
-            var passFill = driver.FindElement(By.Name("password"));
-            passFill.SendKeys("shayan1382");
-            passFill.Submit(); //or we can use driver.FindElement(By.Id("generated-id-2")).Click();
-
-            //close pup ups if needed
-            if(CheckForPupUp(driver))
-            {
-                driver.FindElement(By.CssSelector(".swal2-cancel")).Click();
-                
-                var closebtn2 = driver.FindElements(By.ClassName("toast-close-button"));
-                if (closebtn2.ToArray().Length != 0) closebtn2.ToArray()[0].Click();
-
-                wait.Until(ExpectedConditions.ElementToBeClickable(By.XPath("/html/body/div[4]/button"))).Click();
-            }
-
-            //making new order
-            wait.Until(ExpectedConditions.ElementToBeClickable(By.Id("generated-id-8"))).Click();
-
-            //check if there is draft order
-            if (NewOrder(driver))
-            {
-                driver.FindElement(By.Id("generated-id-3")).Click();
-            }
-
-            //clicking on AI assistant fill form if existing
-            if (AI(driver))
-            {
-                driver.FindElement(By.Id("AI_fill_form")).Click();
-            }
-
-            //filling the 1st form
-            driver.FindElement(By.Id("business_name")).SendKeys("test");
-            driver.FindElement(By.Id("generated-id-29")).Click(); // I did these tow lines because if we don't use the submit btn when the BN is filled, we won't see the business name error (this is a website bug i believe)
-            wait.Until(ExpectedConditions.ElementToBeClickable(By.Id("business_name"))).SendKeys(Keys.Control + "a" + Keys.Backspace);
-            if(!BNError(driver))
-            {
-                Console.WriteLine("business name error");
-            }
-
-            //filling the B.Name
-            driver.FindElement(By.Id("business_name")).SendKeys("انبوه سازان پارس");
-            
-            //selecting B
-            driver.FindElement(By.CssSelector(".selectize-control.form-control-proj.categories.public_searchable_dropdown")).Click();
-            driver.FindElement(By.CssSelector("div[data-value=\"1\"]")).Click(); //or using the keyboard to type then enter
-            
-            //checking the toast container
-            driver.FindElement(By.Id("generated-id-29")).Click();
-            if (!ToastContainer(driver))
-            {
-                Console.WriteLine("toast-container didn't show up!");
-                driver.Quit();
-            }
-            
-            //filling the subject
-            driver.FindElement(By.Id("subject-ai")).SendKeys("طراحی لوگو برای شرکت ساختمانی");
-            driver.FindElement(By.Id("generated-id-29")).Click();
-
-            //checking needed words in subject
-            var subject = driver.FindElement(By.Id("title"));
-            string subjectText = subject.GetAttribute("innerText");
-            string[] wordsToCheck = {"لوگو", "طراحی", "انبوه سازان پارس"};
-            if (!subjectText.Contains(wordsToCheck[0])
-                && !subjectText.Contains(wordsToCheck[1])
-                && !subjectText.Contains(wordsToCheck[2]))
-            {
-                Console.WriteLine("Textarea doesn't contains: " + subjectText);
-                driver.Quit();
-            }
-
-            //checking needed words in category
-            var category = wait.Until(ExpectedConditions.ElementToBeClickable(By.XPath("//*[@id=\"tour-category\"]/div/div[1]/div")));
-            string categoryText = category.GetAttribute("innerText");
-            string check = "طراحی گرافیک و بصری";
-            if (!categoryText.Contains(check))
-            {
-                Console.WriteLine("Category doesn't contains: " + categoryText);
-                driver.Quit();
-            }
-
-            //checking needed words in subCategory
-            var subCategory = wait.Until(ExpectedConditions.ElementToBeClickable(By.XPath("//*[@id=\"tour-sub_category\"]/div/div[1]/div")));
-            string subCategoryText = subCategory.GetAttribute("innerText");
-            string check2 = "طراحی لوگو";
-            if (!subCategoryText.Contains(check2))
-            {
-                Console.WriteLine("Subcategory doesn't contains: " + subCategoryText);
-                driver.Quit();
-            }
-
-            //clicking the next btn
-            driver.FindElement(By.Id("generated-id-30")).Click();
-
-            var waitForAI = new WebDriverWait(driver, TimeSpan.FromSeconds(300));
-            waitForAI.Until(ExpectedConditions.ElementToBeClickable(By.Id("generated-id-28"))).Click();
-
-            //uploading file
-            var fileInput = driver.FindElement(By.ClassName("dz-hidden-input"));
-            fileInput.SendKeys("D:\\images.png");
-            wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("//*[@id=\"createP\"]/form/main/div/div[5]/div[2]/div[2]/div[2]/div[1]/div[2]/div[5]")));
-            driver.FindElement(By.Id("generated-id-28")).Click();
-
-            //next page
-            driver.FindElement(By.Id("generated-id-28")).Click();
-
-            //checking the page
-
-            if(driver.FindElement(By.Id("business-name")).Text != "انبوه سازان پارس")
-            {
-                Console.WriteLine("BN is not correct!");
-            }
-            
-            if (driver.FindElement(By.Id("field-of-activity")).Text != "مارکتینگ")
-            {
-                Console.WriteLine("FA is not correct!");
-            }
-
-            if (driver.FindElement(By.Id("title")).Text != "طراحی لوگو برای شرکت انبوه سازان پارس")
-            {
-                Console.WriteLine("title is not correct!");
-            }
-
-            var image = driver.FindElement(By.XPath("//*[@id=\"show_files\"]/div/div[1]/img"));
-            Actions actions = new Actions(driver);
-            actions.MoveToElement(image);
-            actions.Perform();
-            var imageName = "images.png";
-            if (image.GetAttribute("alt") != imageName)
-            {
-                Console.WriteLine("image is not correct");
-            }
-
-            //next page
-            driver.FindElement(By.Id("generated-id-32")).Click();
-            //go to home page if needed
-            var closebtn = driver.FindElements(By.XPath("/html/body/nav/div/a"));
-            if (closebtn.ToArray().Length != 0) closebtn.ToArray()[0].Click();
-
-
-            //close pup ups if needed
-            if (CheckForPupUp(driver))
-            {
-                driver.FindElement(By.CssSelector(".swal2-cancel")).Click();
-
-                var closebtn2 = driver.FindElements(By.ClassName("toast-close-button"));
-                if (closebtn2.ToArray().Length != 0) closebtn2.ToArray()[0].Click();
-
-                wait.Until(ExpectedConditions.ElementToBeClickable(By.XPath("/html/body/div[4]/button"))).Click();
-
-            }
-            if (driver.FindElement(By.XPath("//*[@id=\"generated-id-17\"]")).Text != "طراحی لوگو برای شرکت ساختمانی انبوه سازان پارس")
-            {
-                Console.WriteLine("title is not correct!");
-            }
-
+            NavigateToUrl("https://sandbox.kowork.work");
+            ClickLoginButton();
+            EnterPhoneNumber("09114437522");
+            SelectEmployer();
+            EnterPassword("shayan1382");
+            ClosePopUpsIfNeeded();
+            CreateNewOrder();
+            FillBusinessName("انبوه سازان پارس");
+            SelectCategory();
+            FillSubject("طراحی لوگو برای شرکت ساختمانی");
+            ValidateSubjectAndCategory();
+            GoToNextPage(By.Id("generated-id-30"));
+            GoToNextPage(By.Id("generated-id-28"), 300);
+            UploadFile("D:\\images.png");
+            GoToNextPage(By.Id("generated-id-28"));
+            ValidateNextPage();
+            GoToNextPage(By.Id("generated-id-32"));
+            Check();
+            NavigateToHomePageIfNeeded();
+            ValidateFinalPage();
         }
 
-        static bool CheckForPupUp(IWebDriver driver)
+        private void Check()
         {
-            var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
-            try
-            {
-                wait.Until(ExpectedConditions.ElementIsVisible(By.ClassName("swal2-popup")));
-                return true;
-            }
-            catch (WebDriverTimeoutException) { return false; }
+            var understood = _driver.FindElements(By.Id("generated-id-33"));
+            if (understood.ToArray().Length != 0) understood.ToArray()[0].Click();
+            else _driver.FindElement(By.XPath("/html/body/nav/div/a")).Click();
         }
-        static bool NewOrder(IWebDriver driver)
+
+        private void GoToNextPage(By locator, int time = 10)
         {
-            var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
-            try
-            {
-                wait.Until(ExpectedConditions.ElementIsVisible(By.Id("generated-id-3")));
-                return true;
-            }
-            catch (WebDriverTimeoutException) { return false; }
+            var wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(time));
+            wait.Until(ExpectedConditions.ElementToBeClickable(locator)).Click();
         }
-        static bool AI(IWebDriver driver)
+        private void NavigateToUrl(string url)
+        {
+            _driver.Navigate().GoToUrl(url);
+        }
+
+        private void ClickLoginButton()
+        {
+            ClickElement(By.ClassName("black"));
+        }
+
+        private void EnterPhoneNumber(string phoneNumber)
+        {
+            EnterText(By.Id("phone"), phoneNumber);
+            SubmitForm(By.Id("phone"));
+        }
+
+        private void SelectEmployer()
+        {
+            ClickElement(By.CssSelector("#generated-id-3"));
+        }
+
+        private void EnterPassword(string password)
+        {
+            WaitForElement(By.Id("generated-id-5")).Click();
+            EnterText(By.Name("password"), password);
+            SubmitForm(By.Name("password"));
+        }
+
+        private void ClosePopUpsIfNeeded()
+        {
+            if (IsElementVisible(By.ClassName("swal2-popup")))
+            {
+                ClickElement(By.CssSelector(".swal2-cancel"));
+                CloseToastIfVisible();
+                ClickElement(By.XPath("/html/body/div[4]/button"));
+            }
+        }
+
+        private void CreateNewOrder()
+        {
+            ClickElement(By.Id("generated-id-8"));
+            if (IsElementVisible(By.Id("generated-id-3")))
+            {
+                ClickElement(By.Id("generated-id-3"));
+            }
+        }
+
+        private void FillBusinessName(string businessName)
+        {
+            EnterText(By.Id("business_name"), businessName);
+            ClickElement(By.Id("generated-id-29"));
+            ClearText(By.Id("business_name"));
+            if (!IsElementVisible(By.Id("business_name-error")))
+            {
+                Assert.Fail("Business name error not shown.");
+            }
+            EnterText(By.Id("business_name"), businessName);
+        }
+
+        private void SelectCategory()
+        {
+            ClickElement(By.CssSelector(".selectize-control.form-control-proj.categories.public_searchable_dropdown"));
+            ClickElement(By.CssSelector("div[data-value=\"1\"]"));
+        }
+
+        private void FillSubject(string subject)
+        {
+            EnterText(By.Id("subject-ai"), subject);
+            ClickElement(By.Id("generated-id-29"));
+        }
+
+        private void ValidateSubjectAndCategory()
+        {
+            var subjectText = GetElementInnerText(By.Id("subject"));
+            string[] wordsToCheck = { "لوگو", "طراحی", "انبوه سازان پارس" };
+            foreach (var word in wordsToCheck)
+            {
+                Assert.IsTrue(subjectText.Contains(word), $"Textarea doesn't contain: {word}");
+            }
+
+            var categoryText = GetElementText(By.XPath("//*[@id=\"tour-category\"]/div/div[1]/div"));
+            Assert.IsTrue(categoryText.Contains("طراحی گرافیک و بصری"), $"Category doesn't contain: {categoryText}");
+
+            var subCategoryText = GetElementText(By.XPath("//*[@id=\"tour-sub_category\"]/div/div[1]/div"));
+            Assert.IsTrue(subCategoryText.Contains("طراحی لوگو"), $"Subcategory doesn't contain: {subCategoryText}");
+        }
+
+        private void UploadFile(string filePath)
+         {
+            var fileInput = _driver.FindElement(By.ClassName("dz-hidden-input"));
+            fileInput.SendKeys(filePath);
+            WaitForElement(By.XPath("//*[@id=\"createP\"]/form/main/div/div[5]/div[2]/div[2]/div[2]/div[1]/div[2]/div[5]"));
+            ClickElement(By.Id("generated-id-28"));
+        }
+
+        private void ValidateNextPage()
+        {
+            Assert.AreEqual("انبوه سازان پارس", GetElementText(By.Id("business-name")), "Business name is not correct.");
+            Assert.AreEqual("مارکتینگ", GetElementText(By.Id("field-of-activity")), "Field of activity is not correct.");
+            Assert.AreEqual("طراحی لوگو برای شرکت ساختمانی انبوه سازان پارس", GetElementText(By.Id("title")), "Title is not correct.");
+
+            var image = _driver.FindElement(By.XPath("//*[@id=\"show_files\"]/div/div[1]/img"));
+            Assert.AreEqual("images.png", image.GetAttribute("alt"), "Image is not correct.");
+        }
+
+        private void NavigateToHomePageIfNeeded()
+        {
+            var closeButtons = _driver.FindElements(By.XPath("/html/body/nav/div/a"));
+            if (closeButtons.Count > 0)
+            {
+                closeButtons[0].Click();
+            }
+        }
+
+        private void ValidateFinalPage()
+        {
+            if (IsElementVisible(By.ClassName("swal2-popup")))
+            {
+                ClickElement(By.CssSelector(".swal2-cancel"));
+                CloseToastIfVisible();
+                ClickElement(By.XPath("/html/body/div[4]/button"));
+            }
+
+            Assert.AreEqual("طراحی لوگو برای شرکت ساختمانی انبوه سازان پارس", GetElementText(By.XPath("//*[@id=\"generated-id-17\"]")), "Title is not correct.");
+        }
+
+        private void ClickElement(By locator)
+        {
+            WaitForElement(locator).Click();
+        }
+
+        private void EnterText(By locator, string text)
+        {
+            WaitForElement(locator).SendKeys(text);
+        }
+
+        private void SubmitForm(By locator)
+        {
+            WaitForElement(locator).Submit();
+        }
+
+        private void ClearText(By locator)
+        {
+            WaitForElement(locator).SendKeys(Keys.Control + "a" + Keys.Backspace);
+        }
+
+        private IWebElement WaitForElement(By locator)
+        {
+            return _wait.Until(ExpectedConditions.ElementToBeClickable(locator));
+        }
+
+        private bool IsElementVisible(By locator)
         {
             try
             {
-                var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(5));
-                wait.Until(ExpectedConditions.ElementIsVisible(By.Id("AI_fill_form")));
-                return true;
+                return _wait.Until(ExpectedConditions.ElementIsVisible(locator)) != null;
             }
-            catch (WebDriverTimeoutException) { return false; }
-        }
-        static bool BNError(IWebDriver driver)
-        {
-            try
+            catch (WebDriverTimeoutException)
             {
-                var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
-                wait.Until(ExpectedConditions.ElementIsVisible(By.Id("business_name-error")));
-                return true;
+                return false;
             }
-            catch (WebDriverTimeoutException) { return false; }
-        }
-        static bool ToastContainer(IWebDriver driver)
-        {
-            try
-            {
-                var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
-                wait.Until(ExpectedConditions.ElementIsVisible(By.Id("toast-container")));
-                return true;
-            }
-            catch (WebDriverTimeoutException) { return false; }
         }
 
+        private string GetElementText(By locator)
+        {
+            return WaitForElement(locator).Text;
+        }
+
+        private string GetElementInnerText(By locator)
+        {
+            return WaitForElement(locator).GetAttribute("value");
+        }
+
+        private void CloseToastIfVisible()
+        {
+            var closeButtons = _driver.FindElements(By.ClassName("toast-close-button"));
+            if (closeButtons.Count > 0)
+            {
+                closeButtons[0].Click();
+            }
+        }
+
+        public void Dispose()
+        {
+            _driver?.Quit();
+            _driver?.Dispose();
+        }
     }
 }
