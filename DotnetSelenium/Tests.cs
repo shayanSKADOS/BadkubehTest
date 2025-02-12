@@ -3,6 +3,10 @@ using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.DevTools.V130.Autofill;
 using OpenQA.Selenium.Support.UI;
 using SeleniumExtras.WaitHelpers;
+using static OpenQA.Selenium.BiDi.Modules.Script.RemoteValue;
+using System;
+using System.Threading;
+using OpenQA.Selenium.Interactions;
 
 
 namespace DotnetSelenium
@@ -47,8 +51,12 @@ namespace DotnetSelenium
             //close pup ups if needed
             if(CheckForPupUp(driver))
             {
-                driver.FindElement(By.Id("generated-id-50")).Click();
-                driver.FindElement(By.Id("generated-id-55")).Click();
+                driver.FindElement(By.CssSelector(".swal2-cancel")).Click();
+                
+                var closebtn2 = driver.FindElements(By.ClassName("toast-close-button"));
+                if (closebtn2.ToArray().Length != 0) closebtn2.ToArray()[0].Click();
+
+                wait.Until(ExpectedConditions.ElementToBeClickable(By.XPath("/html/body/div[4]/button"))).Click();
             }
 
             //making new order
@@ -132,7 +140,65 @@ namespace DotnetSelenium
             var waitForAI = new WebDriverWait(driver, TimeSpan.FromSeconds(300));
             waitForAI.Until(ExpectedConditions.ElementToBeClickable(By.Id("generated-id-28"))).Click();
 
-            //3.14
+            //uploading file
+            var fileInput = driver.FindElement(By.ClassName("dz-hidden-input"));
+            fileInput.SendKeys("D:\\images.png");
+            wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("//*[@id=\"createP\"]/form/main/div/div[5]/div[2]/div[2]/div[2]/div[1]/div[2]/div[5]")));
+            driver.FindElement(By.Id("generated-id-28")).Click();
+
+            //next page
+            driver.FindElement(By.Id("generated-id-28")).Click();
+
+            //checking the page
+
+            if(driver.FindElement(By.Id("business-name")).Text != "انبوه سازان پارس")
+            {
+                Console.WriteLine("BN is not correct!");
+            }
+            
+            if (driver.FindElement(By.Id("field-of-activity")).Text != "مارکتینگ")
+            {
+                Console.WriteLine("FA is not correct!");
+            }
+
+            if (driver.FindElement(By.Id("title")).Text != "طراحی لوگو برای شرکت انبوه سازان پارس")
+            {
+                Console.WriteLine("title is not correct!");
+            }
+
+            var image = driver.FindElement(By.XPath("//*[@id=\"show_files\"]/div/div[1]/img"));
+            Actions actions = new Actions(driver);
+            actions.MoveToElement(image);
+            actions.Perform();
+            var imageName = "images.png";
+            if (image.GetAttribute("alt") != imageName)
+            {
+                Console.WriteLine("image is not correct");
+            }
+
+            //next page
+            driver.FindElement(By.Id("generated-id-32")).Click();
+            //go to home page if needed
+            var closebtn = driver.FindElements(By.XPath("/html/body/nav/div/a"));
+            if (closebtn.ToArray().Length != 0) closebtn.ToArray()[0].Click();
+
+
+            //close pup ups if needed
+            if (CheckForPupUp(driver))
+            {
+                driver.FindElement(By.CssSelector(".swal2-cancel")).Click();
+
+                var closebtn2 = driver.FindElements(By.ClassName("toast-close-button"));
+                if (closebtn2.ToArray().Length != 0) closebtn2.ToArray()[0].Click();
+
+                wait.Until(ExpectedConditions.ElementToBeClickable(By.XPath("/html/body/div[4]/button"))).Click();
+
+            }
+            if (driver.FindElement(By.XPath("//*[@id=\"generated-id-17\"]")).Text != "طراحی لوگو برای شرکت ساختمانی انبوه سازان پارس")
+            {
+                Console.WriteLine("title is not correct!");
+            }
+
         }
 
         static bool CheckForPupUp(IWebDriver driver)
@@ -185,7 +251,6 @@ namespace DotnetSelenium
             }
             catch (WebDriverTimeoutException) { return false; }
         }
-
 
     }
 }
