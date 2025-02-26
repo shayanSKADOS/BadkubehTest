@@ -3,6 +3,7 @@ using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.UI;
 using SeleniumExtras.WaitHelpers;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using System;
 
 namespace DotnetSelenium
@@ -16,7 +17,7 @@ namespace DotnetSelenium
         public void Setup()
         {
             _driver = new ChromeDriver();
-            _wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
+            _wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(7));
             _driver.Manage().Window.Maximize();
         }
 
@@ -102,6 +103,10 @@ namespace DotnetSelenium
             {
                 ClickElement(By.Id("generated-id-3"));
             }
+            if (IsElementVisible(By.Id("AI_fill_form")))
+            {
+                ClickElement(By.Id("AI_fill_form"));
+            }
         }
 
         private void FillBusinessName(string businessName)
@@ -134,14 +139,14 @@ namespace DotnetSelenium
             string[] wordsToCheck = { "لوگو", "طراحی", "انبوه سازان پارس" };
             foreach (var word in wordsToCheck)
             {
-                Assert.IsTrue(subjectText.Contains(word), $"Textarea doesn't contain: {word}");
+                ClassicAssert.IsTrue(subjectText.Contains(word), $"Textarea doesn't contain: {word}");
             }
 
             var categoryText = GetElementText(By.XPath("//*[@id=\"tour-category\"]/div/div[1]/div"));
-            Assert.IsTrue(categoryText.Contains("طراحی گرافیک و بصری"), $"Category doesn't contain: {categoryText}");
+            ClassicAssert.IsTrue(categoryText.Contains("طراحی گرافیک و بصری"), $"Category doesn't contain: {categoryText}");
 
             var subCategoryText = GetElementText(By.XPath("//*[@id=\"tour-sub_category\"]/div/div[1]/div"));
-            Assert.IsTrue(subCategoryText.Contains("طراحی لوگو"), $"Subcategory doesn't contain: {subCategoryText}");
+            ClassicAssert.IsTrue(subCategoryText.Contains("طراحی لوگو"), $"Subcategory doesn't contain: {subCategoryText}");
         }
 
         private void UploadFile(string filePath)
@@ -154,12 +159,12 @@ namespace DotnetSelenium
 
         private void ValidateNextPage()
         {
-            Assert.AreEqual("انبوه سازان پارس", GetElementText(By.Id("business-name")), "Business name is not correct.");
-            Assert.AreEqual("مارکتینگ", GetElementText(By.Id("field-of-activity")), "Field of activity is not correct.");
-            Assert.AreEqual("طراحی لوگو برای شرکت ساختمانی انبوه سازان پارس", GetElementText(By.Id("title")), "Title is not correct.");
+            ClassicAssert.AreEqual("انبوه سازان پارس", GetElementText(By.Id("business-name")), "Business name is not correct.");
+            ClassicAssert.AreEqual("مارکتینگ", GetElementText(By.Id("field-of-activity")), "Field of activity is not correct.");
+            ClassicAssert.AreEqual("طراحی لوگو برای شرکت ساختمانی انبوه سازان پارس", GetElementText(By.Id("title")), "Title is not correct.");
 
             var image = _driver.FindElement(By.XPath("//*[@id=\"show_files\"]/div/div[1]/img"));
-            Assert.AreEqual("images.png", image.GetAttribute("alt"), "Image is not correct.");
+            ClassicAssert.AreEqual("images.png", image.GetAttribute("alt"), "Image is not correct.");
         }
 
         private void NavigateToHomePageIfNeeded()
@@ -180,7 +185,7 @@ namespace DotnetSelenium
                 ClickElement(By.XPath("/html/body/div[4]/button"));
             }
 
-            Assert.AreEqual("طراحی لوگو برای شرکت ساختمانی انبوه سازان پارس", GetElementText(By.XPath("//*[@id=\"generated-id-17\"]")), "Title is not correct.");
+            ClassicAssert.AreEqual("طراحی لوگو برای شرکت ساختمانی انبوه سازان پارس", GetElementText(By.XPath("//*[@id=\"generated-id-17\"]")), "Title is not correct.");
         }
 
         private void ClickElement(By locator)
